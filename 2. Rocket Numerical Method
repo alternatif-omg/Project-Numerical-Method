@@ -1,0 +1,129 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Fungsi kecepatan roket
+def velocity(t, n):
+    scaled_t = t / 100.0  # Scale the time variable
+    return 50 + n * scaled_t - 5 * (scaled_t ** 2)
+    # Fungsi posisi roket
+    
+# Turunan pertama fungsi kecepatan
+def velocity_derivative(t, n):
+    return n - 10*t
+
+# Metode Newton-Raphson
+def newton_raphson(initial_guess, tolerance, max_iterations, n):
+    t = initial_guess
+    errors = []
+
+    for i in range(max_iterations):
+        v = velocity(t, n)
+        v_prime = velocity_derivative(t, n)
+        
+        if abs(v_prime) < 1e-10:
+            break  # Menghindari pembagian dengan nol
+        
+        t = t - v / v_prime
+        errors.append(abs(v / v_prime))
+
+        if abs(v) < tolerance:
+            break
+
+    return t, errors
+
+# Metode Secant
+def secant_method(x0, x1, tolerance, max_iterations, n):
+    x_curr = x1
+    x_prev = x0
+    errors = []
+
+    for i in range(max_iterations):
+        v_curr = velocity(x_curr, n)
+        v_prev = velocity(x_prev, n)
+        
+        if abs(v_curr - v_prev) < 1e-10:
+            break  # Menghindari pembagian dengan nol
+
+        x_next = x_curr - v_curr * (x_curr - x_prev) / (v_curr - v_prev)
+        errors.append(abs((x_next - x_curr) / x_next))
+
+        if abs(v_curr) < tolerance:
+            break
+
+        x_prev = x_curr
+        x_curr = x_next
+
+    return x_curr, errors
+
+# Metode Iterasi Titik Tetap
+def fixed_point_iteration(initial_guess, tolerance, max_iterations, n):
+    t = initial_guess
+    errors = []
+
+    for i in range(max_iterations):
+        v = velocity(t, n)
+        errors.append(abs(v / velocity_derivative(t, n)))
+
+        if abs(v) < tolerance:
+            break
+
+        t = v + t
+
+    return t, errors
+
+# Metode Biseksi
+def bisection_method(a, b, tolerance, max_iterations, n):
+    errors = []
+    
+    for i in range(max_iterations):
+        mid = (a + b) / 2
+        v_mid = velocity(mid, n)
+        
+        errors.append(abs((b - a) / mid))
+
+        if abs(v_mid) < tolerance:
+            break
+
+        if v_mid * velocity(a, n) < 0:
+            b = mid
+        else:
+            a = mid
+
+    return mid, errors
+
+# Parameter masukan
+n_value = 7
+initial_guess = 5.0
+tolerance = 0.01
+max_iterations = 100
+
+# Metode Newton-Raphson
+t_newton, errors_newton = newton_raphson(initial_guess, tolerance, max_iterations, n_value)
+
+# Metode Secant
+t_secant, errors_secant = secant_method(initial_guess - 1, initial_guess, tolerance, max_iterations, n_value)
+
+# Metode Iterasi Titik Tetap
+t_fixed_point, errors_fixed_point = fixed_point_iteration(initial_guess, tolerance, max_iterations, n_value)
+
+# Metode Biseksi
+t_bisection, errors_bisection = bisection_method(0, 10, tolerance, max_iterations, n_value)
+
+# Plot grafik error relatif
+iterations = np.arange(1, min(len(errors_newton), len(errors_secant), len(errors_fixed_point), len(errors_bisection)) + 1)
+
+plt.plot(iterations, errors_newton[:len(iterations)], label='Newton-Raphson')
+plt.plot(iterations, errors_secant[:len(iterations)], label='Secant')
+plt.plot(iterations, errors_fixed_point[:len(iterations)], label='Fixed Point Iteration')
+plt.plot(iterations, errors_bisection[:len(iterations)], label='Bisection')
+
+plt.xlabel('Iterations')
+plt.ylabel('Relative Error')
+plt.title('Relative Error Convergence')
+plt.legend()
+plt.show()
+
+print(f"Metode Newton-Raphson: Waktu berhenti roket = {t_newton:.4f} detik")
+print(f"Metode Secant: Waktu berhenti roket = {t_secant:.4f} detik")
+print(f"Metode Iterasi Titik Tetap: Waktu berhenti roket = {t_fixed_point:.4f} detik")
+print(f"Metode Biseksi: Waktu berhenti roket = {t_bisection:.4f} detik")
