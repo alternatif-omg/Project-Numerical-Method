@@ -1,0 +1,54 @@
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Data dari tabel
+x_values = np.array([100, 200, 300, 400, 500])
+m_value = 8
+y_values = np.array([m_value + 1, m_value + 3, 2 * m_value + 3, 2 * m_value + 5, 2 * m_value + 7])
+
+# Pekerja yang ingin diinterpolasi
+x_interpolate = 350
+
+# Metode Newton
+def divided_diff(x, y):
+    n = len(y)
+    coef = np.zeros([n, n])
+
+    # Mengisi kolom pertama dengan nilai f(x)
+    coef[:, 0] = y
+
+    # Menghitung tabel diferensi terbagi
+    for j in range(1, n):
+        for i in range(n - j):
+            coef[i, j] = (coef[i + 1, j - 1] - coef[i, j - 1]) / (x[i + j] - x[i])
+
+    return coef
+
+def newton_interpolation(x, y, x_interpolate):
+    n = len(x)
+    coef = divided_diff(x, y)
+    result = coef[0, 0]
+
+    for i in range(1, n):
+        term = coef[0, i]
+        for j in range(i):
+            term *= (x_interpolate - x[j])
+        result += term
+
+    return result
+
+# Interpolasi
+y_interpolate = newton_interpolation(x_values, y_values, x_interpolate)
+
+# Visualisasi
+plt.scatter(x_values, y_values, label='Data Asli')
+plt.scatter(x_interpolate, y_interpolate, color='red', label='Interpolasi (x=350)')
+plt.plot(x_values, y_values, label='Kurva Asli')
+plt.xlabel('Banyaknya Pekerja')
+plt.ylabel('Banyaknya Produk')
+plt.title('Interpolasi dengan Metode Newton')
+plt.legend()
+plt.show()
+
+# Hasil Interpolasi
+print(f"Banyaknya produk untuk {x_interpolate} pekerja: {y_interpolate:.4f} ton")
